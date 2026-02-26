@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RIDE_RIDDLES Hackathon App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h1>RIDE_RIDDLES</h1>
+            <p class="subtitle">Hackathon Challenge App</p>
+            
+            <div class="control-group">
+                <label for="source">Source Node</label>
+                <select id="source">
+                    <option value="A">Node A</option>
+                    <option value="B">Node B</option>
+                    <option value="C">Node C</option>
+                    <option value="D">Node D</option>
+                    <option value="E">Node E</option>
+                    <option value="F">Node F</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="destination">Destination Node</label>
+                <select id="destination">
+                    <option value="A">Node A</option>
+                    <option value="B">Node B</option>
+                    <option value="C">Node C</option>
+                    <option value="D" selected>Node D</option>
+                    <option value="E">Node E</option>
+                    <option value="F">Node F</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="mode">Transportation Mode</label>
+                <select id="mode">
+                    <option value="foot">On Foot</option>
+                    <option value="ev">EV</option>
+                    <option value="4-wheeler">4-Wheeler</option>
+                    <option value="2-wheeler">2-Wheeler</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="preference">Path Preference</label>
+                <select id="preference">
+                    <option value="smooth">Smooth Roads</option>
+                    <option value="shaded">Shaded Path</option>
+                    <option value="shortest">Pure Time (Shortest)</option>
+                </select>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="find-path-btn" class="btn primary">Show Route</button>
+                <button id="start-car-btn" class="btn accent">Start Arduino Car</button>
+            </div>
+
+            <div class="status-panel">
+                <h3>Route Status</h3>
+                <p id="status-text">Select parameters and find the path.</p>
+                <div class="legend">
+                    <div class="legend-item"><span class="color-box red"></span> 4-Lane</div>
+                    <div class="legend-item"><span class="color-box blue"></span> 2-Lane</div>
+                    <div class="legend-item"><span class="color-box pink"></span> One Way</div>
+                    <div class="legend-item"><span class="color-box cyber-pink"></span> Narrow Alley</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="map-view">
+            <!-- Container locking aspect ratio to A0 (1:1.414) -->
+            <div class="map-container">
+                <canvas id="map-canvas"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="mapRenderer.js"></script>
+</body>
+</html>
