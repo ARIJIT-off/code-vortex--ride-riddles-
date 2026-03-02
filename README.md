@@ -1,6 +1,15 @@
 # Ride Riddles
 
-Ride Riddles is a smart navigation application for Kolkata (New Town, Salt Lake, and Central Kolkata). It uses a custom **Bidirectional A\*** routing engine over real OpenStreetMap (OSM) data to find the optimal route based on your vehicle mode and preferences (Smooth Road, Shaded Road, Shortest Time).
+## 📖 Project Description
+Ride Riddles is an intelligent, full-stack navigation web application designed specifically for Kolkata (New Town, Salt Lake, and Central). It calculates the optimal route between landmarks using live OpenStreetMap data and a custom **Bidirectional A\*** routing engine. 
+
+What makes it unique is its **Mode & Preference Awareness**. Whether you're driving a car, riding a bike, or walking, the app snaps to accessible roads and filters paths based on your preference for a **Smooth Road**, **Shaded Road**, or the **Fastest Time**. It enriches these routes with a curated dataset of real-world Kolkata traffic levels and road conditions.
+
+## 💻 Tech Stack
+* **Frontend:** HTML5, CSS3, Vanilla JavaScript, Leaflet.js (Map Rendering)
+* **Backend:** Node.js, Express.js
+* **Routing Algorithm:** Custom Bidirectional A* Search
+* **Data Sources:** OpenStreetMap (OSM) via Overpass API, Static JSON Curated Dataset
 
 > **Note:** The backend server and the frontend application are completely integrated into this single project folder. You only need to run one command to start everything!
 

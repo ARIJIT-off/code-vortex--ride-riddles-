@@ -199,7 +199,7 @@ function amcrSearch(startId, goalId, adj, nodes, mode, preference, penalties, ha
     // Quality breakdown
     const qs = { smooth: 0, shaded: 0, problematic: 0 };
     // Type breakdown
-    const ts = { '4-lane': 0, '2-lane': 0, 'one way': 0, 'narrow alley': 0 };
+    const ts = { '6-lane': 0, '4-lane': 0, '2-lane': 0, 'one way': 0, 'narrow alley': 0 };
     // Road name samples (one per type for display)
     const roadSamples = {};
     let totalDist = 0;
@@ -225,7 +225,7 @@ function amcrSearch(startId, goalId, adj, nodes, mode, preference, penalties, ha
         path: pathNodes,
         latLngs,
         totalCost: dist.get(goalId),
-        distMetres: Math.round(distMetres),
+        distanceMetres: Math.round(distMetres),
         estTimeMin: estimateTime(distMetres, mode),
         qualityBreakdown: qs,
         typeBreakdown: ts,
@@ -236,12 +236,33 @@ function amcrSearch(startId, goalId, adj, nodes, mode, preference, penalties, ha
 }
 
 // ---------------------------------------------------------------------------
-// Crude time estimate based on mode
+// Time estimate: mode-aware + time-of-day traffic factor.
+//
+// Logic (per user spec):
+//  • foot: always slowest (~5 km/h, traffic doesn't matter)
+//  • car (4-wheeler) ≈ ev: ~35 km/h free-flow; cut to ~20 km/h in peak hours
+//  • 2-wheeler (bike): free-flow similar to car, but slips through traffic →
+//    fastest of all modes ONLY when traffic is heavy (peak hours 09:00–21:00)
 // ---------------------------------------------------------------------------
 function estimateTime(metres, mode) {
-    const speeds = { foot: 5, '2-wheeler': 30, ev: 40, '4-wheeler': 35 }; // km/h
-    const kmh = speeds[mode] || 30;
-    return Math.round((metres / 1000) / kmh * 60);
+    const h = new Date().getHours(); // local hour 0-23
+    const isPeak = h >= 9 && h < 21; // heavy traffic window
+
+    let kmh;
+    if (mode === 'foot') {
+        kmh = 5;   // always slow; traffic irrelevant for pedestrians
+    } else if (mode === 'ev') {
+        kmh = isPeak ? 22 : 40;  // EV slightly faster than car (charge lane)
+    } else if (mode === '4-wheeler') {
+        kmh = isPeak ? 20 : 38;  // car: hit by traffic most
+    } else if (mode === '2-wheeler') {
+        // Bike: freely weaves through traffic → fastest in peak hours
+        kmh = isPeak ? 28 : 32;  // peak: faster than car; free-flow: similar to car
+    } else {
+        kmh = 30;
+    }
+
+    return Math.max(1, Math.round((metres / 1000) / kmh * 60));
 }
 
 // ---------------------------------------------------------------------------
@@ -268,13 +289,13 @@ function findRoutes(startId, goalId, adj, nodes, mode, preference, haversine) {
 }
 
 function _findRoutesPass(startId, goalId, adj, nodes, mode, preference, haversine, relaxed) {
-    const INFLATION = 8.0;
-    const MAX_OVERLAP = 0.60;
+    const INFLATION = 12.0;
+    const MAX_OVERLAP = 0.45; // lowered for better diversity
 
     const penalties = new Map(); // wayId → multiplier
     const results = [];
 
-    for (let attempt = 0; attempt < 6 && results.length < 3; attempt++) {
+    for (let attempt = 0; attempt < 9 && results.length < 3; attempt++) {
         const route = amcrSearch(startId, goalId, adj, nodes, mode, preference, penalties, haversine, relaxed);
         if (!route) break;
 
@@ -294,6 +315,25 @@ function _findRoutesPass(startId, goalId, adj, nodes, mode, preference, haversin
         // Inflate edges of this path to force next search to diverge
         for (const wayId of route.usedEdges) {
             penalties.set(wayId, (penalties.get(wayId) || 1.0) * INFLATION);
+        }
+    }
+
+    // If still only 1 result, try forcing alternatives by removing diversity check
+    // and picking structurally different routes (different first/last third of path)
+    if (results.length === 1 && !relaxed) {
+        const base = results[0];
+        const midNode = base.path[Math.floor(base.path.length / 3)];
+        // Mark mid-segment edges with very heavy penalty to force a bypass
+        for (const wayId of base.usedEdges) {
+            penalties.set(wayId, (penalties.get(wayId) || 1.0) * 50);
+        }
+        for (let attempt = 0; attempt < 4 && results.length < 3; attempt++) {
+            const route = amcrSearch(startId, goalId, adj, nodes, mode, preference, penalties, haversine, relaxed);
+            if (!route) break;
+            results.push(route);
+            for (const wayId of route.usedEdges) {
+                penalties.set(wayId, (penalties.get(wayId) || 1.0) * INFLATION);
+            }
         }
     }
 

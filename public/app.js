@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!data.success) {
                 loadingOv.style.display = 'none';
-                alert(`❌ ${data.error || 'No route found.'}`);
+                alert(`\u274c ${data.error || 'No route found.'}`);
                 return;
             }
 
@@ -102,6 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
             currentMode = mode;
             currentSrc = source;
             currentDst = destination;
+
+            // Kick off OSRM geometry prefetch in background (no await — UI renders immediately)
+            if (window.MapRenderer?.prefetchAllGeometry) {
+                window.MapRenderer.prefetchAllGeometry(currentRoutes, mode);
+            }
 
             renderSummary(data.main, 'Main Route');
             renderQuality(data.main.qualityBreakdown);
@@ -114,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (err) {
             console.error(err);
-            alert('⚠️ Server error. Make sure the backend is running.');
+            alert('\u26a0\ufe0f Server error. Make sure the backend is running.');
         } finally {
             loadingOv.style.display = 'none';
             findBtn.disabled = false;
@@ -123,9 +128,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Render summary stats ─────────────────────────────────────────────────────
     function renderSummary(route, label) {
-        const km = (route.distanceMetres / 1000).toFixed(2);
+        const distM = route.distanceMetres || 0;
+        const km = (distM / 1000).toFixed(2);
+        const min = route.estTimeMin || '?';
         const statusEl = document.getElementById('summary-status');
-        statusEl.innerHTML = `✅ <strong>${label || 'Main Route'}</strong> — <strong>${km} km</strong> • ~${route.estTimeMin} min`;
+        const routeLabel = label || 'Main Route';
+        const srcDst = currentSrc && currentDst
+            ? `<span style="color:#64748b;font-size:0.88em">${currentSrc} → ${currentDst}</span><br>`
+            : '';
+        statusEl.innerHTML = `${srcDst}✅ <strong>${routeLabel}</strong> — <strong>${km} km</strong> • ~${min} min`;
         showSummaryPanel();
     }
 
@@ -148,36 +159,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Alternative route buttons ──────────────────────────────────────────────────
+    let altButtons = []; // track for active-state highlight
+
     function renderAlternatives(alternatives) {
+        altButtons = [];
         if (!alternatives.length) return;
         altSection.style.display = 'block';
 
-        // Main route button
         altList.appendChild(makeAltBtn('Main Route', '#2563EB', currentRoutes[0], 0));
 
-        // Alt buttons
-        const colors = ['#111111', '#b91c1c'];
+        const colors = ['#16a34a', '#b91c1c'];
         const labels = ['Alternative 1', 'Alternative 2'];
         alternatives.forEach((alt, idx) => {
             altList.appendChild(makeAltBtn(labels[idx] || `Alt ${idx + 1}`, colors[idx] || '#888', alt, idx + 1));
+        });
+
+        setActiveAltBtn(0); // Main Route active by default
+    }
+
+    function setActiveAltBtn(activeIdx) {
+        altButtons.forEach((btn, i) => {
+            const isActive = i === activeIdx;
+            btn.style.borderColor = isActive ? 'var(--primary)' : '';
+            btn.style.background = isActive ? 'var(--primary-glow)' : '';
         });
     }
 
     function makeAltBtn(label, color, route, idx) {
         const btn = document.createElement('button');
         btn.className = 'alt-btn';
+        altButtons.push(btn);
 
-        const km = (route.distanceMetres / 1000).toFixed(2);
-        // colored dot + text
+        const distM = route.distanceMetres || 0;
+        const km = (distM / 1000).toFixed(2);
+        const min = route.estTimeMin || '?';
+
+        // Diff vs main — only show if meaningfully different
+        let diffHtml = '';
+        if (idx > 0 && currentRoutes[0]) {
+            const mainDist = currentRoutes[0].distanceMetres || 0;
+            const mainMin = currentRoutes[0].estTimeMin || 0;
+            const dMetres = distM - mainDist;
+            const dMin = (route.estTimeMin || 0) - mainMin;
+            const parts = [];
+            if (Math.abs(dMin) >= 1) {
+                const s = dMin > 0 ? `+${dMin}` : `${dMin}`;
+                parts.push(`<span class="alt-btn-diff" style="color:${dMin > 0 ? '#dc2626' : '#16a34a'}">${s} min</span>`);
+            }
+            if (Math.abs(dMetres) >= 50) {
+                const dKm = (dMetres / 1000).toFixed(1);
+                parts.push(`<span class="alt-btn-diff" style="color:${dMetres > 0 ? '#dc2626' : '#16a34a'}">${dMetres > 0 ? '+' : ''}${dKm} km</span>`);
+            }
+            diffHtml = parts.length ? ' ' + parts.join(' ') : '';
+        }
+
         btn.innerHTML = `
             <span style="width:14px;height:14px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block;"></span>
             <span class="alt-btn-text">
                 <span class="alt-btn-label">${label}</span>
-                <span class="alt-btn-meta">${km} km • ~${route.estTimeMin} min</span>
+                <span class="alt-btn-meta">${km} km &bull; ~${min} min${diffHtml}</span>
             </span>
         `;
 
         btn.onclick = () => {
+            setActiveAltBtn(idx);
             if (window.MapRenderer) {
                 window.MapRenderer.showRoutes(currentRoutes, idx, currentMode, currentSrc, currentDst);
             }
@@ -187,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         return btn;
     }
+
 
     // ── PATH TYPE card ───────────────────────────────────────────────────────
     const pathtypeCard = document.getElementById('pathtype-card');
@@ -212,22 +258,27 @@ document.addEventListener('DOMContentLoaded', () => {
      * h = current local hour (0-23)
      */
     function computeTraffic(tb, h) {
-        // tb = { '4-lane': pct, '2-lane': pct, 'one way': pct, 'narrow alley': pct }
-        const isPeak = h >= 9 && h < 21;     // 9 AM – 9 PM
-        const isMorn = h >= 9 && h < 12;     // 9 AM – 12 PM (small roads busier)
-        const isEve = h >= 16 && h < 18;    // 4 PM – 6 PM (small roads busier)
+        // tb = { '6-lane': pct, '4-lane': pct, '2-lane': pct, 'one way': pct, 'narrow alley': pct }
+        const isPeak = h >= 9 && h < 21;
+        const isMorn = h >= 9 && h < 12;
+        const isEve = h >= 16 && h < 18;
 
+        const lane6pct = tb['6-lane'] || 0;
         const lane4pct = tb['4-lane'] || 0;
         const lane2pct = (tb['2-lane'] || 0) + (tb['one way'] || 0);
         const narrowpct = tb['narrow alley'] || 0;
 
-        // Weighted congestion score (0-100)
-        const lane4factor = 25;  // always
+        // 6-lane: always 30% (fast highway baseline)
+        // 4-lane: always 25%
+        // 2-lane/oneway: 50% in peak, 10% off-peak
+        // narrow: never crowded
+        const lane6factor = 30;
+        const lane4factor = 25;
         const lane2factor = isPeak ? 50 : 10;
-        const narrowfactor = 0;   // never crowded
-        const smallFactor = (isMorn || isEve) ? 10 : 5;
+        const narrowfactor = 0;
 
         const weighted =
+            (lane6pct / 100) * lane6factor +
             (lane4pct / 100) * lane4factor +
             (lane2pct / 100) * lane2factor +
             (narrowpct / 100) * narrowfactor;
@@ -242,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const TYPE_META = {
+        '6-lane': { label: '6-Lane Road', cls: 'lane6' },
         '4-lane': { label: '4-Lane Road', cls: 'lane4' },
         '2-lane': { label: '2-Lane Road', cls: 'lane2' },
         'one way': { label: 'One-Way Road', cls: 'oneway' },
@@ -253,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pathtypeRows.innerHTML = '';
 
-        const order = ['4-lane', '2-lane', 'one way', 'narrow alley'];
+        const order = ['6-lane', '4-lane', '2-lane', 'one way', 'narrow alley'];
         for (const key of order) {
             const pct = tb[key] || 0;
             const meta = TYPE_META[key];

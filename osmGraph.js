@@ -64,7 +64,8 @@ function qualityFromId(osmId) {
 // ---------------------------------------------------------------------------
 function roadType(tags = {}) {
     const h = tags.highway || '';
-    if (['motorway', 'motorway_link', 'trunk', 'trunk_link'].includes(h)) return '4-lane';
+    if (['motorway', 'motorway_link'].includes(h)) return '6-lane';
+    if (['trunk', 'trunk_link'].includes(h)) return '6-lane';
     if (['primary', 'primary_link', 'secondary', 'secondary_link'].includes(h)) return '2-lane';
     if (['tertiary', 'tertiary_link', 'unclassified', 'residential'].includes(h)) return '2-lane';
     if (h === 'service') return 'one way';
@@ -169,80 +170,80 @@ const LANDMARKS = [
     {
         name: 'IEM Salt Lake',
         searchName: 'Institute of Engineering & Management',
-        lat: 22.5776, lon: 88.4625
+        lat: 22.5701392, lon: 88.4296927
     },
     {
         name: 'St. Xaviers University',
         searchName: "St. Xavier's University",
-        lat: 22.5789, lon: 88.4608
+        lat: 22.5619515, lon: 88.4874215
     },
     {
         name: 'WB Judicial Academy',
         searchName: 'West Bengal Judicial Academy',
-        lat: 22.5697, lon: 88.4718
+        lat: 22.5566075, lon: 88.4939620
     },
     {
         name: 'NKDA Office',
         searchName: 'New Town Kolkata Development Authority',
-        lat: 22.5800, lon: 88.4701
+        lat: 22.5786919, lon: 88.4746413
     },
     {
         name: 'Hidco Bhaban',
         searchName: 'HIDCO Bhaban',
-        lat: 22.5842, lon: 88.4783
+        lat: 22.5802626, lon: 88.4729883
     },
     // ── Eco Park / Action Area II ─────────────────────────────────────────
     {
         name: 'Eco Park',
         searchName: 'Eco Park',
-        lat: 22.5954, lon: 88.4718
+        lat: 22.6004077, lon: 88.4706037
     },
     {
         name: 'Biswa Bangla Gate',
         searchName: 'Biswa Bangla Gate',
-        lat: 22.5780, lon: 88.4780
+        lat: 22.5787154, lon: 88.4718362
     },
     {
         name: 'City Centre 2',
         searchName: 'City Centre 2',
-        lat: 22.5725, lon: 88.4744
+        lat: 22.6226339, lon: 88.4502582
     },
     {
         name: 'Rosedale Garden',
         searchName: 'Rosedale Garden',
-        lat: 22.5802, lon: 88.4651
+        lat: 22.5630586, lon: 88.4912058
     },
     // ── Salt Lake / Sector V ──────────────────────────────────────────────
     {
         name: 'City Centre 1',
         searchName: 'City Centre 1',
-        lat: 22.5697, lon: 88.4304
+        lat: 22.5880898, lon: 88.4081969
     },
     {
         name: 'Salt Lake Stadium',
         searchName: 'Vivekananda Yuba Bharati Krirangan',
-        lat: 22.5729, lon: 88.4160
+        lat: 22.5690538, lon: 88.4090443
     },
     {
         name: 'Sector V',
         searchName: 'Sector V',
-        lat: 22.5766, lon: 88.4374
+        lat: 22.5735314, lon: 88.4331189
     },
     // ── Central Kolkata ───────────────────────────────────────────────────
     {
         name: 'Howrah Bridge',
         searchName: 'Howrah Bridge',
-        lat: 22.5853, lon: 88.3467
+        lat: 22.5851270, lon: 88.3467759
     },
     {
         name: 'Victoria Memorial',
         searchName: 'Victoria Memorial',
-        lat: 22.5448, lon: 88.3426
+        lat: 22.5448082, lon: 88.3425578
     },
     {
         name: 'Park Street',
         searchName: 'Park Street',
-        lat: 22.5524, lon: 88.3523
+        lat: 22.5541098, lon: 88.3513570
     },
 ];
 
@@ -383,7 +384,7 @@ function buildFallbackGraph() {
     });
 
     const qualities = ['smooth', 'smooth', 'shaded', 'problematic'];
-    const types = ['4-lane', '2-lane', 'one way', 'narrow alley'];
+    const types = ['6-lane', '4-lane', '2-lane', 'one way', 'narrow alley'];
     const lmIds = Array.from(coordMap.keys());
 
     for (let i = 0; i < lmIds.length; i++) {

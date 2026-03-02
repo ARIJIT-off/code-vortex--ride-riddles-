@@ -12,12 +12,14 @@
 const path = require('path');
 
 // ── Name normaliser ─────────────────────────────────────────────────────────
-// The JSON was created with original names; map them to current app names.
+// Maps dataset names → current app landmark names (bidirectional lookup)
 const NAME_MAP = {
     "IEM Newtown": "IEM Salt Lake",
-    "UEM Newtown": "IEM Newtown",
-    "St. Xavier's University": "St. Xavier's University",   // keep same
-    "St. Xaviers University": "St. Xavier's University"    // alt spelling
+    "St. Xavier's University": "St. Xaviers University",   // dataset → app name
+    "St. Xavier's University, Kolkata": "St. Xaviers University",
+    "St Xaviers University": "St. Xaviers University",
+    "WB Judicial Academy": "WB Judicial Academy",
+    "NKDA": "NKDA Office",
 };
 
 function norm(name) {
@@ -104,18 +106,21 @@ function lookupRoute(from, to) {
 
 // ── Public enricher ──────────────────────────────────────────────────────────
 // Takes the AMCR router result and, if a dataset entry exists for this A→B
-// pair, replaces the computed values with the curated dataset values.
-// If no entry found, returns the original result unchanged.
+// pair, enriches with curated road quality and accurate GPS distance.
+//
+// IMPORTANT: estTimeMin is ALWAYS kept from the AMCR router because it is
+// mode-aware and traffic-aware. The dataset has only one generic time value
+// that ignores transport mode entirely.
 function enrichRoute(result, fromName, toName) {
     const r = lookupRoute(fromName, toName);
 
-    // Always normalise the router's distMetres field name first
+    // Normalise field name
     const base = {
         ...result,
         distanceMetres: result.distanceMetres ?? result.distMetres ?? 0
     };
 
-    if (!r) return base;   // no dataset entry → return with just the field-name fix
+    if (!r) return base;   // no dataset entry → use fully OSM-computed values
 
     const qualityBreakdown = deriveQuality(r);
     const typeBreakdown = deriveTypeBreakdown(r);
@@ -123,12 +128,14 @@ function enrichRoute(result, fromName, toName) {
 
     return {
         ...base,
+        // Use dataset GPS distance (more accurate than OSM graph estimate)
         distanceMetres: Math.round(r.distance_km * 1000),
-        estTimeMin: Math.round(r.estimated_travel_time_min),
+        // KEEP the AMCR mode-aware time — do NOT overwrite with dataset's
+        // single fixed time which has no knowledge of transport mode.
+        // estTimeMin stays from `base` (already computed per mode in amcrRouter)
         qualityBreakdown,
         typeBreakdown,
         roadSamples,
-        // extra fields forwarded to frontend
         trafficLevel: r.traffic_level,
         shadeOverall: r.shade_overall,
         smoothRoad: r.smooth_road,

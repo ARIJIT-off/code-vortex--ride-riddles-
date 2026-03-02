@@ -727,6 +727,10 @@ select:focus {
 }
 
 /* Colors per road type */
+.pt-dot.lane6 {
+    background: #e11d48;
+}
+
 .pt-dot.lane4 {
     background: #f59e0b;
 }
@@ -741,6 +745,10 @@ select:focus {
 
 .pt-dot.narrow {
     background: #6b7280;
+}
+
+.pt-bar-fill.lane6 {
+    background: #e11d48;
 }
 
 .pt-bar-fill.lane4 {
@@ -805,4 +813,63 @@ select:focus {
 .traffic-badge.traf-high {
     color: #ef4444;
     background: rgba(239, 68, 68, 0.10);
+}
+
+/* Alternative route diff chips (+/- time/distance) */
+.alt-btn-diff {
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-left: 0.35rem;
+}
+
+/* ─── Leaflet Tooltip (route hover) ─────────────────────────────────────── */
+.leaflet-tooltip {
+    background: #0f172a !important;
+    color: #f1f5f9 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.leaflet-tooltip::before {
+    display: none !important;
+}
+
+/* ─── Smooth float card entrance ─────────────────────────────────────────── */
+.float-card {
+    transition: box-shadow 0.2s ease, opacity 0.25s ease;
+}
+
+.float-card:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Smooth alt route list ──────────────────────────────────────────────── */
+.alt-btn {
+    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s !important;
+}
+
+.alt-btn:hover {
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.12);
+}
+
+/* ─── Route line pulse animation for active route ────────────────────────── */
+@keyframes routePulse {
+    0% {
+        opacity: 0.88;
+    }
+
+    50% {
+        opacity: 1.00;
+    }
+
+    100% {
+        opacity: 0.88;
+    }
 }
