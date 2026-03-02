@@ -19,28 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const qualSection = document.getElementById('quality-section');
     const altSection = document.getElementById('alt-section');
     const altList = document.getElementById('alt-list');
-    const summaryToggle = document.getElementById('summary-toggle');
 
-    // ── Summary panel collapse toggle (default: hidden until route found) ────
-    let summaryVisible = false;
-
-    summaryToggle.style.display = 'none'; // hide toggle until first route
-
-    summaryToggle.addEventListener('click', () => {
-        summaryVisible = !summaryVisible;
-        summaryCard.classList.toggle('collapsed', !summaryVisible);
-        summaryToggle.textContent = summaryVisible ? '📋 Summary ◀' : '📋 Summary ▶';
-        summaryToggle.classList.toggle('open', summaryVisible);
-    });
-
+    // ── Show summary panel (collapse handled by card-header inline script) ────
     function showSummaryPanel() {
         summaryCard.style.display = 'flex';
-        summaryToggle.style.display = 'flex';
-        summaryVisible = true;
-        summaryCard.classList.remove('collapsed');
-        summaryToggle.textContent = '📋 Summary ◀';
-        summaryToggle.classList.add('open');
     }
+
 
     // ── Pre-select different default destinations ────────────────────────────
     dstSel.value = 'Eco Park';

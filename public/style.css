@@ -169,8 +169,7 @@ body {
     border: 1px solid var(--card-border);
     border-radius: 16px;
     box-shadow: var(--card-shadow);
-    overflow: hidden;
-    /* keeps rounded corners during collapse */
+    /* overflow intentionally NOT set — would clip <select> dropdowns */
 }
 
 /* ── Collapsible card header ──────────────────────────────────────────────── */
