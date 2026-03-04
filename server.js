@@ -106,4 +106,27 @@ app.post('/api/path', (req, res) => {
     });
 });
 
-app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+// ── Health check endpoint (for Render + keep-alive pings) ────────────────────
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+
+app.listen(PORT, () => {
+    console.log(`Server listening on http://localhost:${PORT}`);
+
+    // ── Keep-alive self-ping (Render free tier sleeps after 15 min idle) ──────
+    // Render sets RENDER_EXTERNAL_URL automatically on deployed services.
+    const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+    if (RENDER_URL) {
+        const INTERVAL_MS = 14 * 60 * 1000; // 14 minutes
+        setInterval(async () => {
+            try {
+                await fetch(`${RENDER_URL}/api/health`);
+                console.log('♻️  Keep-alive ping sent');
+            } catch (err) {
+                console.warn('⚠️  Keep-alive ping failed:', err.message);
+            }
+        }, INTERVAL_MS);
+        console.log('♻️  Keep-alive enabled — pinging every 14 min');
+    }
+});
