@@ -20,6 +20,32 @@
 
 <body>
 
+    <!-- ── View Chooser Overlay ──────────────────────────────────────────────── -->
+    <div class="view-chooser" id="view-chooser">
+        <div class="vc-bg"></div>
+        <div class="vc-content">
+            <div class="vc-logo">
+                <span class="vc-logo-icon">🗺</span>
+                <span class="vc-logo-text">RIDE<span class="vc-logo-accent">_RIDDLES</span></span>
+            </div>
+            <p class="vc-subtitle">Smart Navigation · New Town, Kolkata</p>
+            <h2 class="vc-heading">Choose Your View</h2>
+            <div class="vc-cards">
+                <button class="vc-card" id="vc-desktop">
+                    <span class="vc-card-icon">🖥️</span>
+                    <span class="vc-card-label">Desktop View</span>
+                    <span class="vc-card-desc">Full sidebar, wide map, detailed panels</span>
+                </button>
+                <button class="vc-card" id="vc-mobile">
+                    <span class="vc-card-icon">📱</span>
+                    <span class="vc-card-label">Mobile View</span>
+                    <span class="vc-card-desc">Compact layout, bottom sheets, touch-friendly</span>
+                </button>
+            </div>
+            <p class="vc-hint">You can switch anytime from the top bar</p>
+        </div>
+    </div>
+
     <!-- ── Top Bar ───────────────────────────────────────────────────────────── -->
     <header class="topbar">
         <div class="topbar-brand">
@@ -29,6 +55,10 @@
         <div class="topbar-meta">
             <span class="meta-chip">Action Area III · New Town, Kolkata</span>
         </div>
+        <button class="switch-view-btn" id="switch-view-btn" title="Switch between Desktop and Mobile view">
+            <span id="switch-view-icon">📱</span>
+            <span id="switch-view-label">Mobile</span>
+        </button>
     </header>
 
     <main class="map-stage">
@@ -209,29 +239,88 @@
     <script src="mapRenderer.js"></script>
     <script src="app.js"></script>
 
-    <!-- ── Collapsible card logic ──────────────────────────────────────────── -->
+    <!-- ── View Chooser + Collapsible card logic ───────────────────────────── -->
     <script>
         (function () {
-            // Wire up every card-header to toggle its card-body
+            var KEY = 'rr-view';
+            var chooser = document.getElementById('view-chooser');
+            var body = document.body;
+
+            // ── Apply a view mode ────────────────────────────────────────────
+            function applyView(mode) {
+                body.setAttribute('data-view', mode);
+                // Update the switch button to show the OTHER option
+                var icon = document.getElementById('switch-view-icon');
+                var label = document.getElementById('switch-view-label');
+                if (mode === 'mobile') {
+                    if (icon) icon.textContent = '🖥️';
+                    if (label) label.textContent = 'Desktop';
+                } else {
+                    if (icon) icon.textContent = '📱';
+                    if (label) label.textContent = 'Mobile';
+                }
+                // Invalidate Leaflet map size after layout change
+                setTimeout(function () {
+                    if (window.L && window.L.Map) {
+                        document.querySelectorAll('.leaflet-container').forEach(function (el) {
+                            var mapInst = el._leaflet_id && L.Map._instances;
+                            // Simpler: just trigger resize
+                        });
+                    }
+                    window.dispatchEvent(new Event('resize'));
+                }, 100);
+
+                // Mobile: collapse search card by default
+                if (mode === 'mobile') {
+                    var sb = document.getElementById('search-body');
+                    if (sb) sb.classList.add('card-body--collapsed');
+                    var ch = document.querySelector('#search-card .card-chevron');
+                    if (ch) ch.style.transform = 'rotate(-90deg)';
+                }
+            }
+
+            // ── Check saved preference ───────────────────────────────────────
+            var saved = localStorage.getItem(KEY);
+            if (saved) {
+                chooser.style.display = 'none';
+                applyView(saved);
+            } else {
+                chooser.style.display = '';
+            }
+
+            // ── Chooser button clicks ────────────────────────────────────────
+            document.getElementById('vc-desktop').addEventListener('click', function () {
+                localStorage.setItem(KEY, 'desktop');
+                chooser.classList.add('vc-exit');
+                setTimeout(function () { chooser.style.display = 'none'; }, 400);
+                applyView('desktop');
+            });
+            document.getElementById('vc-mobile').addEventListener('click', function () {
+                localStorage.setItem(KEY, 'mobile');
+                chooser.classList.add('vc-exit');
+                setTimeout(function () { chooser.style.display = 'none'; }, 400);
+                applyView('mobile');
+            });
+
+            // ── Switch view button in topbar ─────────────────────────────────
+            document.getElementById('switch-view-btn').addEventListener('click', function () {
+                var current = body.getAttribute('data-view') || 'desktop';
+                var next = current === 'desktop' ? 'mobile' : 'desktop';
+                localStorage.setItem(KEY, next);
+                applyView(next);
+            });
+
+            // ── Wire up card-header collapse toggles ─────────────────────────
             document.querySelectorAll('.card-header').forEach(function (hdr) {
                 hdr.addEventListener('click', function () {
                     var targetId = hdr.getAttribute('data-target');
-                    var body = document.getElementById(targetId);
+                    var cardBody = document.getElementById(targetId);
                     var chevron = hdr.querySelector('.card-chevron');
-                    if (!body) return;
-
-                    var collapsed = body.classList.toggle('card-body--collapsed');
+                    if (!cardBody) return;
+                    var collapsed = cardBody.classList.toggle('card-body--collapsed');
                     if (chevron) chevron.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
                 });
             });
-
-            // On mobile (<= 640px) start search card collapsed so map is fully visible
-            if (window.innerWidth <= 640) {
-                var sb = document.getElementById('search-body');
-                if (sb) sb.classList.add('card-body--collapsed');
-                var ch = document.querySelector('#search-card .card-chevron');
-                if (ch) ch.style.transform = 'rotate(-90deg)';
-            }
         })();
     </script>
 </body>
