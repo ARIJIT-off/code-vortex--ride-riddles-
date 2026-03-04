@@ -91,39 +91,104 @@ function modeAllowed(mode, tags = {}) {
 
 // ---------------------------------------------------------------------------
 // Build adjacency graph from raw Overpass JSON
+// Edges carry shapePoints (intermediate OSM nodes between junctions) so the
+// router can reconstruct actual road geometry instead of straight segments.
 // ---------------------------------------------------------------------------
 function buildGraph(overpassData) {
     const coordMap = new Map();
     const adj = new Map();
 
+    // ── Pass 1: collect all node coords ────────────────────────────────────
     for (const el of overpassData.elements) {
         if (el.type === 'node') {
             coordMap.set(el.id, { lat: el.lat, lon: el.lon });
         }
     }
 
-    for (const el of overpassData.elements) {
-        if (el.type !== 'way') continue;
+    // ── Pass 2: count how many ways reference each node ────────────────────
+    // A node that appears in 2+ ways is a true road junction.
+    // The first and last node of any way are also junctions (endpoints).
+    const nodeUseCount = new Map();
+    const ways = overpassData.elements.filter(el => el.type === 'way');
+
+    for (const way of ways) {
+        const refs = way.nodes;
+        for (const id of refs) {
+            nodeUseCount.set(id, (nodeUseCount.get(id) || 0) + 1);
+        }
+    }
+
+    // ── Pass 3: build edges, grouping shape-only nodes between junctions ───
+    for (const el of ways) {
         const refs = el.nodes;
         const tags = el.tags || {};
         const isOneway = tags.oneway === 'yes' || tags.junction === 'roundabout';
         const quality = qualityFromId(el.id);
         const type = roadType(tags);
 
-        for (let i = 0; i < refs.length - 1; i++) {
-            const a = refs[i], b = refs[i + 1];
-            const cA = coordMap.get(a), cB = coordMap.get(b);
-            if (!cA || !cB) continue;
+        // Walk the refs list. Accumulate shape points between junction nodes.
+        // A node is a junction if it: (a) is used by 2+ ways, OR (b) is the
+        // first/last node of this way.
+        let segStart = refs[0];
+        let shapeAccum = [];  // intermediate shape nodes after segStart
+        let segDist = 0;
 
-            const dist = haversine(cA, cB);
-            if (dist < 0.1) continue;
+        for (let i = 1; i < refs.length; i++) {
+            const cur = refs[i];
+            const prev = refs[i - 1];
+            const cPrev = coordMap.get(prev);
+            const cCur = coordMap.get(cur);
+            if (!cPrev || !cCur) {
+                // Missing coord — reset segment
+                segStart = cur;
+                shapeAccum = [];
+                segDist = 0;
+                continue;
+            }
 
-            if (!adj.has(a)) adj.set(a, []);
-            if (!adj.has(b)) adj.set(b, []);
+            segDist += haversine(cPrev, cCur);
 
-            adj.get(a).push({ to: b, dist, quality, type, tags, wayId: el.id });
-            if (!isOneway) {
-                adj.get(b).push({ to: a, dist, quality, type, tags, wayId: el.id });
+            const isLast = (i === refs.length - 1);
+            const isJunction = (nodeUseCount.get(cur) || 0) >= 2 || isLast;
+
+            if (isJunction && segStart !== cur) {
+                // Emit edge segStart → cur with accumulated shape intermediates
+                if (segDist < 0.1) {
+                    // Too short — skip but start new segment here
+                    segStart = cur;
+                    shapeAccum = [];
+                    segDist = 0;
+                    continue;
+                }
+
+                if (!adj.has(segStart)) adj.set(segStart, []);
+                if (!adj.has(cur)) adj.set(cur, []);
+
+                // Forward shape points (excluding the endpoints themselves)
+                const fwdShape = shapeAccum.map(id => {
+                    const c = coordMap.get(id);
+                    return c ? { lat: c.lat, lon: c.lon } : null;
+                }).filter(Boolean);
+
+                adj.get(segStart).push({
+                    to: cur, dist: segDist, quality, type, tags,
+                    wayId: el.id,
+                    shapePoints: fwdShape
+                });
+                if (!isOneway) {
+                    adj.get(cur).push({
+                        to: segStart, dist: segDist, quality, type, tags,
+                        wayId: el.id,
+                        shapePoints: [...fwdShape].reverse()
+                    });
+                }
+
+                segStart = cur;
+                shapeAccum = [];
+                segDist = 0;
+            } else if (!isJunction) {
+                // cur is a shape-only bend — accumulate it
+                shapeAccum.push(cur);
             }
         }
     }
@@ -132,9 +197,25 @@ function buildGraph(overpassData) {
 }
 
 // ---------------------------------------------------------------------------
-// Fetch OSM road graph from Overpass
+// Fetch OSM road graph — try local cache first, then Overpass API
 // ---------------------------------------------------------------------------
 async function fetchRoadGraph() {
+    // 1. Try loading from local cache (works on Render/Railway where Overpass is blocked)
+    const cachePath = require('path').join(__dirname, 'osm_cache.json');
+    try {
+        const fs = require('fs');
+        if (fs.existsSync(cachePath)) {
+            console.log('📦 Loading OSM graph from local cache...');
+            const raw = fs.readFileSync(cachePath, 'utf8');
+            const json = JSON.parse(raw);
+            console.log(`✅ Cached OSM data loaded: ${json.elements.length} elements`);
+            return buildGraph(json);
+        }
+    } catch (cacheErr) {
+        console.warn('⚠️  Cache read failed:', cacheErr.message);
+    }
+
+    // 2. Fallback: fetch live from Overpass API
     console.log('🗺  Fetching OSM road data from Overpass API...');
     try {
         const res = await fetch(OVERPASS_URL, {
