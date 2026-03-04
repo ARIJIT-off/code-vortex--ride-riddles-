@@ -176,7 +176,7 @@
         routeLayers.push(shadow, line);
 
         // Fit map to route with padding
-        map.fitBounds(L.latLngBounds(lls), { padding: [70, 70], maxZoom: 16 });
+        map.fitBounds(L.latLngBounds(lls), { paddingTopLeft: [280, 70], paddingBottomRight: [70, 70], maxZoom: 16 });
 
         // Refresh landmark pins
         loadLandmarks(sourceName, destName);

@@ -1,60 +1,36 @@
 /**
- * app.js — RIDE_RIDDLES Application Logic
- * Handles UI interactions and connects to the backend.
+ * app.js — RIDE_RIDDLES · Single Drawer Layout
  */
-
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ── DOM refs ─────────────────────────────────────────────────────────────
     const findBtn = document.getElementById('find-path-btn');
     const swapBtn = document.getElementById('swap-btn');
     const srcSel = document.getElementById('source');
     const dstSel = document.getElementById('destination');
     const modeSel = document.getElementById('mode');
     const prefSel = document.getElementById('preference');
-    const summaryCard = document.getElementById('summary-card');
     const loadingOv = document.getElementById('loading-overlay');
     const loadingTxt = document.getElementById('loading-text');
     const qualSection = document.getElementById('quality-section');
     const altSection = document.getElementById('alt-section');
     const altList = document.getElementById('alt-list');
-    const advSection = document.getElementById('advanced-section');
     const pathtypeRows = document.getElementById('pathtype-rows');
     const trafficBadge = document.getElementById('traffic-badge');
-    const trafficBanner = document.getElementById('traffic-banner');
 
-    // ── Show summary panel ────────────────────────────────────────────────────
-    function showSummaryPanel() {
-        summaryCard.style.display = 'flex';
-        // If hidden via sidebar toggle, un-hide
-        summaryCard.classList.remove('sidebar-hidden');
-        var toggleBtn = document.getElementById('toggle-summary');
-        if (toggleBtn) toggleBtn.textContent = '▶';
-    }
-
-    // ── Pre-select different default destinations ────────────────────────────
     dstSel.value = 'Eco Park';
 
-    // ── Swap source / destination ────────────────────────────────────────────
     swapBtn.addEventListener('click', () => {
         const tmp = srcSel.value;
         srcSel.value = dstSel.value;
         dstSel.value = tmp;
-        // Sync to mobile selects
-        const mSrc = document.getElementById('m-source');
-        const mDst = document.getElementById('m-destination');
-        if (mSrc) mSrc.value = srcSel.value;
-        if (mDst) mDst.value = dstSel.value;
     });
 
-    // ── State ────────────────────────────────────────────────────────────────
     let currentRoutes = [];
     let currentMode = 'foot';
     let currentSrc = '';
     let currentDst = '';
 
-    // ── Find Route ────────────────────────────────────────────────────────────
     findBtn.addEventListener('click', runRoute);
 
     async function runRoute() {
@@ -63,20 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const mode = modeSel.value;
         const preference = prefSel.value;
 
-        if (source === destination) {
-            alert('Source and destination must be different.');
-            return;
-        }
+        if (source === destination) { alert('Source and destination must be different.'); return; }
 
-        // Loading state
         findBtn.disabled = true;
         loadingTxt.textContent = 'Computing optimal route…';
         loadingOv.style.display = 'flex';
-        summaryCard.style.display = 'none';
         qualSection.style.display = 'none';
         altSection.style.display = 'none';
         altList.innerHTML = '';
-        advSection.style.display = 'none';
 
         if (window.MapRenderer) window.MapRenderer.clearRoutes();
 
@@ -88,11 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
 
-            if (!data.success) {
-                loadingOv.style.display = 'none';
-                alert(`\u274c ${data.error || 'No route found.'}`);
-                return;
-            }
+            if (!data.success) { loadingOv.style.display = 'none'; alert(`\u274c ${data.error || 'No route found.'}`); return; }
 
             currentRoutes = [data.main, ...(data.alternatives || [])];
             currentMode = mode;
@@ -112,6 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.MapRenderer.showRoutes(currentRoutes, 0, mode, source, destination);
             }
 
+            // Unlock drawer tabs
+            if (window.unlockDrawerTabs) window.unlockDrawerTabs();
+
         } catch (err) {
             console.error(err);
             alert('\u26a0\ufe0f Server error. Make sure the backend is running.');
@@ -121,61 +90,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ── Render summary stats ─────────────────────────────────────────────────
     function renderSummary(route, label) {
-        const distM = route.distanceMetres || 0;
-        const km = (distM / 1000).toFixed(2);
+        const km = ((route.distanceMetres || 0) / 1000).toFixed(2);
         const min = route.estTimeMin || '?';
-        const statusEl = document.getElementById('summary-status');
         const routeLabel = label || 'Main Route';
         const srcDst = currentSrc && currentDst
-            ? `<span style="color:#64748b;font-size:0.88em">${currentSrc} → ${currentDst}</span><br>`
-            : '';
-        statusEl.innerHTML = `${srcDst}✅ <strong>${routeLabel}</strong> — <strong>${km} km</strong> • ~${min} min`;
-        showSummaryPanel();
+            ? `<span style="color:#94a3b8;font-size:0.85em">${currentSrc} → ${currentDst}</span><br>` : '';
+        document.getElementById('summary-status').innerHTML =
+            `${srcDst}✅ <strong>${routeLabel}</strong> — <strong>${km} km</strong> • ~${min} min`;
     }
 
-    // ── Road quality bar ──────────────────────────────────────────────────────
     function renderQuality(qb) {
         if (!qb) return;
-        const smooth = qb.smooth || 0;
-        const shaded = qb.shaded || 0;
-        const rough = qb.problematic || 0;
-
-        document.getElementById('qb-smooth').style.width = `${smooth}%`;
-        document.getElementById('qb-shaded').style.width = `${shaded}%`;
-        document.getElementById('qb-rough').style.width = `${rough}%`;
-
-        document.getElementById('ql-smooth').textContent = smooth;
-        document.getElementById('ql-shaded').textContent = shaded;
-        document.getElementById('ql-rough').textContent = rough;
-
+        const s = qb.smooth || 0, sh = qb.shaded || 0, r = qb.problematic || 0;
+        document.getElementById('qb-smooth').style.width = s + '%';
+        document.getElementById('qb-shaded').style.width = sh + '%';
+        document.getElementById('qb-rough').style.width = r + '%';
+        document.getElementById('ql-smooth').textContent = s;
+        document.getElementById('ql-shaded').textContent = sh;
+        document.getElementById('ql-rough').textContent = r;
         qualSection.style.display = 'block';
     }
 
-    // ── Alternative route buttons ──────────────────────────────────────────────
     let altButtons = [];
 
-    function renderAlternatives(alternatives) {
+    function renderAlternatives(alts) {
         altButtons = [];
-        if (!alternatives.length) return;
+        if (!alts.length) return;
         altSection.style.display = 'block';
 
         altList.appendChild(makeAltBtn('Main Route', '#2563EB', currentRoutes[0], 0));
-
         const colors = ['#16a34a', '#b91c1c'];
         const labels = ['Alternative 1', 'Alternative 2'];
-        alternatives.forEach((alt, idx) => {
-            altList.appendChild(makeAltBtn(labels[idx] || `Alt ${idx + 1}`, colors[idx] || '#888', alt, idx + 1));
-        });
-
+        alts.forEach((a, i) => altList.appendChild(makeAltBtn(labels[i] || `Alt ${i + 1}`, colors[i] || '#888', a, i + 1)));
         setActiveAltBtn(0);
     }
 
-    function setActiveAltBtn(activeIdx) {
-        altButtons.forEach((btn, i) => {
-            const isActive = i === activeIdx;
-            btn.classList.toggle('alt-btn--active', isActive);
+    function setActiveAltBtn(idx) {
+        altButtons.forEach((b, i) => {
+            b.style.borderColor = i === idx ? 'var(--primary)' : '';
+            b.style.background = i === idx ? 'rgba(37,99,235,0.12)' : '';
         });
     }
 
@@ -183,42 +137,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.createElement('button');
         btn.className = 'alt-btn';
         altButtons.push(btn);
-
-        const distM = route.distanceMetres || 0;
-        const km = (distM / 1000).toFixed(2);
+        const km = ((route.distanceMetres || 0) / 1000).toFixed(2);
         const min = route.estTimeMin || '?';
 
-        let diffHtml = '';
+        let diff = '';
         if (idx > 0 && currentRoutes[0]) {
-            const mainDist = currentRoutes[0].distanceMetres || 0;
-            const mainMin = currentRoutes[0].estTimeMin || 0;
-            const dMetres = distM - mainDist;
-            const dMin = (route.estTimeMin || 0) - mainMin;
-            const parts = [];
-            if (Math.abs(dMin) >= 1) {
-                const s = dMin > 0 ? `+${dMin}` : `${dMin}`;
-                parts.push(`<span class="alt-btn-diff" style="color:${dMin > 0 ? '#dc2626' : '#16a34a'}">${s} min</span>`);
-            }
-            if (Math.abs(dMetres) >= 50) {
-                const dKm = (dMetres / 1000).toFixed(1);
-                parts.push(`<span class="alt-btn-diff" style="color:${dMetres > 0 ? '#dc2626' : '#16a34a'}">${dMetres > 0 ? '+' : ''}${dKm} km</span>`);
-            }
-            diffHtml = parts.length ? ' ' + parts.join(' ') : '';
+            const dM = (route.distanceMetres || 0) - (currentRoutes[0].distanceMetres || 0);
+            const dT = (route.estTimeMin || 0) - (currentRoutes[0].estTimeMin || 0);
+            const p = [];
+            if (Math.abs(dT) >= 1) p.push(`<span class="alt-btn-diff" style="color:${dT > 0 ? '#ef4444' : '#22c55e'}">${dT > 0 ? '+' : ''}${dT} min</span>`);
+            if (Math.abs(dM) >= 50) p.push(`<span class="alt-btn-diff" style="color:${dM > 0 ? '#ef4444' : '#22c55e'}">${dM > 0 ? '+' : ''}${(dM / 1000).toFixed(1)} km</span>`);
+            diff = p.length ? ' ' + p.join(' ') : '';
         }
 
         btn.innerHTML = `
-            <span class="alt-btn-dot" style="background:${color}"></span>
+            <span style="width:12px;height:12px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block;"></span>
             <span class="alt-btn-text">
                 <span class="alt-btn-label">${label}</span>
-                <span class="alt-btn-meta">${km} km &bull; ~${min} min${diffHtml}</span>
-            </span>
-        `;
+                <span class="alt-btn-meta">${km} km &bull; ~${min} min${diff}</span>
+            </span>`;
 
         btn.onclick = () => {
             setActiveAltBtn(idx);
-            if (window.MapRenderer) {
-                window.MapRenderer.showRoutes(currentRoutes, idx, currentMode, currentSrc, currentDst);
-            }
+            if (window.MapRenderer) window.MapRenderer.showRoutes(currentRoutes, idx, currentMode, currentSrc, currentDst);
             renderSummary(route, label);
             renderQuality(route.qualityBreakdown);
             renderPathType(route.typeBreakdown, route.roadSamples, route.trafficLevel);
@@ -226,28 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return btn;
     }
 
-
-    // ── Traffic model ─────────────────────────────────────────────────────────
-    function computeTraffic(tb, h) {
-        const isPeak = h >= 9 && h < 21;
-        const lane6pct = tb['6-lane'] || 0;
-        const lane4pct = tb['4-lane'] || 0;
-        const lane2pct = (tb['2-lane'] || 0) + (tb['one way'] || 0);
-        const narrowpct = tb['narrow alley'] || 0;
-
-        const weighted =
-            (lane6pct / 100) * 30 +
-            (lane4pct / 100) * 25 +
-            (lane2pct / 100) * (isPeak ? 50 : 10) +
-            (narrowpct / 100) * 0;
-
-        const score = Math.min(100, weighted);
-        if (score < 10) return { label: 'FREE', cls: 'traf-free' };
-        if (score < 25) return { label: 'LOW', cls: 'traf-low' };
-        if (score < 45) return { label: 'MEDIUM', cls: 'traf-medium' };
-        return { label: 'HIGH', cls: 'traf-high' };
-    }
-
+    // ── Path Type ────────────────────────────────────────────────────────
     const TYPE_META = {
         '6-lane': { label: '6-Lane Road', cls: 'lane6' },
         '4-lane': { label: '4-Lane Road', cls: 'lane4' },
@@ -256,50 +176,40 @@ document.addEventListener('DOMContentLoaded', () => {
         'narrow alley': { label: 'Narrow Alley', cls: 'narrow' },
     };
 
+    function computeTraffic(tb, h) {
+        const pk = h >= 9 && h < 21;
+        const w = ((tb['6-lane'] || 0) / 100) * 30 + ((tb['4-lane'] || 0) / 100) * 25 +
+            (((tb['2-lane'] || 0) + (tb['one way'] || 0)) / 100) * (pk ? 50 : 10);
+        const s = Math.min(100, w);
+        if (s < 10) return { label: 'FREE', cls: 'traf-free' };
+        if (s < 25) return { label: 'LOW', cls: 'traf-low' };
+        if (s < 45) return { label: 'MEDIUM', cls: 'traf-medium' };
+        return { label: 'HIGH', cls: 'traf-high' };
+    }
+
     function renderPathType(tb, samples, serverTrafficLevel) {
         if (!tb) return;
-
-        pathtypeRows.innerHTML = '';
-
         const order = ['6-lane', '4-lane', '2-lane', 'one way', 'narrow alley'];
-        for (const key of order) {
-            const pct = tb[key] || 0;
-            const meta = TYPE_META[key];
-            const roadName = (samples && samples[key]) ? samples[key] : null;
-
-            const row = document.createElement('div');
-            row.className = 'pt-row';
-            row.innerHTML = `
+        pathtypeRows.innerHTML = order.map(key => {
+            const pct = tb[key] || 0, m = TYPE_META[key];
+            const rn = (samples && samples[key]) ? samples[key] : null;
+            return `<div class="pt-row">
                 <div class="pt-row-top">
-                    <span class="pt-dot ${meta.cls}"></span>
-                    <span class="pt-name">${meta.label}</span>
+                    <span class="pt-dot ${m.cls}"></span>
+                    <span class="pt-name">${m.label}</span>
                     <span class="pt-pct">${pct}%</span>
                 </div>
-                ${roadName ? `<div class="pt-road-name">${roadName}</div>` : ''}
-                <div class="pt-bar-track">
-                    <div class="pt-bar-fill ${meta.cls}" style="width:${pct}%"></div>
-                </div>
-            `;
-            pathtypeRows.appendChild(row);
-        }
+                ${rn ? `<div class="pt-road-name">${rn}</div>` : ''}
+                <div class="pt-bar-track"><div class="pt-bar-fill ${m.cls}" style="width:${pct}%"></div></div>
+            </div>`;
+        }).join('');
 
-        // Traffic
         let traffic;
         if (serverTrafficLevel) {
-            const MAP = {
-                'Low': { label: 'LOW', cls: 'traf-low' },
-                'Medium': { label: 'MEDIUM', cls: 'traf-medium' },
-                'High': { label: 'HIGH', cls: 'traf-high' }
-            };
+            const MAP = { 'Low': { label: 'LOW', cls: 'traf-low' }, 'Medium': { label: 'MEDIUM', cls: 'traf-medium' }, 'High': { label: 'HIGH', cls: 'traf-high' } };
             traffic = MAP[serverTrafficLevel] || computeTraffic(tb, new Date().getHours());
-        } else {
-            traffic = computeTraffic(tb, new Date().getHours());
-        }
+        } else { traffic = computeTraffic(tb, new Date().getHours()); }
         trafficBadge.textContent = traffic.label;
         trafficBadge.className = 'traffic-badge ' + traffic.cls;
-        trafficBanner.className = 'traffic-banner ' + traffic.cls;
-
-        // Show the advanced section
-        advSection.style.display = 'block';
     }
 });

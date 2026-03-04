@@ -177,24 +177,46 @@ function amcrSearch(startId, goalId, adj, nodes, mode, preference, penalties, ha
 
     if (!dist.has(goalId)) return null;
 
-    // Reconstruct path
+    // Reconstruct path (node list + per-edge shape geometry)
+    // Walk backwards from goal to start, collecting nodes and edges in order.
     const pathNodes = [];
+    const pathEdges = [];   // same length as pathNodes - 1
     const usedEdges = new Set();
     let cur = goalId;
     let distMetres = 0;
     while (cur !== startId) {
         pathNodes.unshift(cur);
         const { parentId, edge } = prev.get(cur);
+        pathEdges.unshift(edge);
         usedEdges.add(edge.wayId);
         distMetres += edge.dist;
         cur = parentId;
     }
     pathNodes.unshift(startId);
 
-    const latLngs = pathNodes.map(id => {
-        const c = nodes.get(id);
-        return { lat: c.lat, lon: c.lon };
-    });
+    // Build latLngs expanding each edge's intermediate shape points so the
+    // polyline follows actual road curves instead of straight diagonal lines.
+    const latLngs = [];
+    for (let i = 0; i < pathNodes.length; i++) {
+        const c = nodes.get(pathNodes[i]);
+        if (!c) continue;
+        latLngs.push({ lat: c.lat, lon: c.lon });
+        // Insert shape points that lie between this node and the next junction
+        if (i < pathEdges.length) {
+            const sp = pathEdges[i].shapePoints;
+            if (sp && sp.length > 0) {
+                for (const pt of sp) latLngs.push(pt);
+            }
+        }
+    }
+
+    // Recalculate distance from actual polyline (matches what's drawn on the map)
+    let polyDist = 0;
+    for (let i = 1; i < latLngs.length; i++) {
+        polyDist += haversine(latLngs[i - 1], latLngs[i]);
+    }
+    console.log(`  📏 Route: ${(polyDist / 1000).toFixed(2)} km (${latLngs.length} pts)`);
+    distMetres = polyDist;
 
     // Quality breakdown
     const qs = { smooth: 0, shaded: 0, problematic: 0 };

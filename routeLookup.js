@@ -128,8 +128,8 @@ function enrichRoute(result, fromName, toName) {
 
     return {
         ...base,
-        // Use dataset GPS distance (more accurate than OSM graph estimate)
-        distanceMetres: Math.round(r.distance_km * 1000),
+        // KEEP the AMCR polyline-computed distance — it matches the drawn route.
+        // Dataset distance_km is straight-line / curated and can be inaccurate.
         // KEEP the AMCR mode-aware time — do NOT overwrite with dataset's
         // single fixed time which has no knowledge of transport mode.
         // estTimeMin stays from `base` (already computed per mode in amcrRouter)
