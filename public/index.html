@@ -52,9 +52,6 @@
             <span class="brand-icon">🗺</span>
             <span class="brand-name">RIDE<span class="brand-accent">_RIDDLES</span></span>
         </div>
-        <div class="topbar-meta">
-            <span class="meta-chip">Action Area III · New Town, Kolkata</span>
-        </div>
         <button class="switch-view-btn" id="switch-view-btn" title="Switch between Desktop and Mobile view">
             <span id="switch-view-icon">📱</span>
             <span id="switch-view-label">Mobile</span>
@@ -65,8 +62,13 @@
         <!-- Leaflet full-screen map -->
         <div id="map"></div>
 
-        <!-- ── Search Card (top-left, collapsible) ───────────────────────────── -->
+        <!-- ══════════════════════════════════════════════════════════════════════ -->
+        <!-- DESKTOP: Search Card (top-left, collapsible sidebar)                  -->
+        <!-- ══════════════════════════════════════════════════════════════════════ -->
         <div class="float-card search-card" id="search-card">
+            <!-- Toggle arrow for hide/show sidebar -->
+            <button class="sidebar-toggle sidebar-toggle-left" id="toggle-search" title="Hide panel">◀</button>
+
             <div class="card-header" data-target="search-body">
                 <div class="card-title">Plan Route</div>
                 <button class="card-chevron" aria-label="Toggle">&#8964;</button>
@@ -165,29 +167,32 @@
                 <button id="find-path-btn" class="btn-primary">
                     <span class="btn-icon">🔍</span> Find Route
                 </button>
+
+                <!-- ── Advanced accordion (PATH TYPE + TRAFFIC) ───────────────── -->
+                <div class="advanced-section" id="advanced-section" style="display:none;">
+                    <button class="advanced-toggle" id="advanced-toggle">
+                        <span>Advanced</span>
+                        <span class="adv-chevron">&#8964;</span>
+                    </button>
+                    <div class="advanced-body" id="advanced-body">
+                        <!-- Traffic banner -->
+                        <div class="traffic-banner" id="traffic-banner">
+                            <span class="traffic-banner-label">TRAFFIC</span>
+                            <span class="traffic-badge" id="traffic-badge">—</span>
+                        </div>
+                        <!-- Path type rows -->
+                        <div class="pathtype-rows" id="pathtype-rows"></div>
+                    </div>
+                </div>
             </div><!-- /card-body -->
         </div>
 
-        <!-- ── PATH TYPE Card (below search card, collapsible) ──────────────── -->
-        <div class="float-card pathtype-card" id="pathtype-card" style="display:none;">
-            <div class="card-header" data-target="pathtype-body">
-                <div class="pathtype-header">
-                    <span class="pathtype-icon">🛣</span>
-                    <span class="pathtype-title">PATH TYPE</span>
-                </div>
-                <button class="card-chevron" aria-label="Toggle">&#8964;</button>
-            </div>
-            <div class="card-body" id="pathtype-body">
-                <div class="pathtype-rows" id="pathtype-rows"></div>
-                <div class="pathtype-traffic" id="pathtype-traffic">
-                    <span class="traffic-label">TRAFFIC</span>
-                    <span class="traffic-badge" id="traffic-badge">—</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── Route Summary Card (right side, collapsible) ─────────────────── -->
+        <!-- ══════════════════════════════════════════════════════════════════════ -->
+        <!-- DESKTOP: Route Summary Card (bottom-right, with legend integrated)    -->
+        <!-- ══════════════════════════════════════════════════════════════════════ -->
         <div class="float-card summary-card" id="summary-card" style="display:none;">
+            <button class="sidebar-toggle sidebar-toggle-right" id="toggle-summary" title="Hide panel">▶</button>
+
             <div class="card-header" data-target="summary-body">
                 <div class="summary-title">Route Summary</div>
                 <button class="card-chevron" aria-label="Toggle">&#8964;</button>
@@ -215,17 +220,113 @@
                     <div class="alt-label">Alternative Routes</div>
                     <div id="alt-list" class="alt-list"></div>
                 </div>
+
+                <!-- ── Integrated Legend ──────────────────────────────────────── -->
+                <div class="summary-legend">
+                    <div class="legend-divider"></div>
+                    <div class="legend-row"><span class="lc-line main"></span><span>Main Route</span></div>
+                    <div class="legend-row"><span class="lc-line alt1"></span><span>Alternative 1</span></div>
+                    <div class="legend-row"><span class="lc-line alt2"></span><span>Alternative 2</span></div>
+                    <div class="legend-row"><span class="lc-pin start"></span><span>Start</span></div>
+                    <div class="legend-row"><span class="lc-pin end"></span><span>End</span></div>
+                </div>
             </div><!-- /card-body -->
         </div>
 
-        <!-- ── Legend card (bottom-right) ──────────────────────────────────────── -->
-        <div class="float-card legend-card">
-            <div class="legend-row"><span class="lc-line main"></span><span>Main Route</span></div>
-            <div class="legend-row"><span class="lc-line alt1"></span><span>Alternative 1</span></div>
-            <div class="legend-row"><span class="lc-line alt2"></span><span>Alternative 2</span></div>
-            <div class="legend-divider"></div>
-            <div class="legend-row"><span class="lc-pin start"></span><span>Start</span></div>
-            <div class="legend-row"><span class="lc-pin end"></span><span>End</span></div>
+        <!-- ══════════════════════════════════════════════════════════════════════ -->
+        <!-- MOBILE: Compact Bottom Search Bar                                     -->
+        <!-- ══════════════════════════════════════════════════════════════════════ -->
+        <div class="mobile-search-bar" id="mobile-search-bar">
+            <div class="msb-fields">
+                <select id="m-source" class="msb-select">
+                    <optgroup label="── New Town ──">
+                        <option value="IEM Salt Lake">IEM Salt Lake</option>
+                        <option value="St. Xaviers University">St. Xavier's</option>
+                        <option value="WB Judicial Academy">WB Judicial</option>
+                        <option value="NKDA Office">NKDA Office</option>
+                        <option value="Hidco Bhaban">Hidco Bhaban</option>
+                    </optgroup>
+                    <optgroup label="── Eco Park ──">
+                        <option value="Eco Park">Eco Park</option>
+                        <option value="Biswa Bangla Gate">Biswa Bangla</option>
+                        <option value="City Centre 2">City Centre 2</option>
+                        <option value="Rosedale Garden">Rosedale</option>
+                    </optgroup>
+                    <optgroup label="── Salt Lake ──">
+                        <option value="City Centre 1">City Centre 1</option>
+                        <option value="Salt Lake Stadium">Stadium</option>
+                        <option value="Sector V">Sector V</option>
+                    </optgroup>
+                    <optgroup label="── Kolkata ──">
+                        <option value="Howrah Bridge">Howrah Bridge</option>
+                        <option value="Victoria Memorial">Victoria</option>
+                        <option value="Park Street">Park Street</option>
+                    </optgroup>
+                </select>
+                <span class="msb-arrow">→</span>
+                <select id="m-destination" class="msb-select">
+                    <optgroup label="── New Town ──">
+                        <option value="IEM Salt Lake">IEM Salt Lake</option>
+                        <option value="St. Xaviers University">St. Xavier's</option>
+                        <option value="WB Judicial Academy">WB Judicial</option>
+                        <option value="NKDA Office">NKDA Office</option>
+                        <option value="Hidco Bhaban">Hidco Bhaban</option>
+                    </optgroup>
+                    <optgroup label="── Eco Park ──">
+                        <option value="Eco Park">Eco Park</option>
+                        <option value="Biswa Bangla Gate">Biswa Bangla</option>
+                        <option value="City Centre 2">City Centre 2</option>
+                        <option value="Rosedale Garden">Rosedale</option>
+                    </optgroup>
+                    <optgroup label="── Salt Lake ──">
+                        <option value="City Centre 1">City Centre 1</option>
+                        <option value="Salt Lake Stadium">Stadium</option>
+                        <option value="Sector V">Sector V</option>
+                    </optgroup>
+                    <optgroup label="── Kolkata ──">
+                        <option value="Howrah Bridge">Howrah Bridge</option>
+                        <option value="Victoria Memorial">Victoria</option>
+                        <option value="Park Street">Park Street</option>
+                    </optgroup>
+                </select>
+            </div>
+            <button class="msb-settings-btn" id="msb-settings-btn" title="Settings">⚙️</button>
+            <button class="msb-go-btn" id="msb-go-btn">Go</button>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════════ -->
+        <!-- MOBILE: Settings Sheet (MODE + PREFER)                                -->
+        <!-- ══════════════════════════════════════════════════════════════════════ -->
+        <div class="mobile-settings-sheet" id="mobile-settings-sheet">
+            <div class="mss-backdrop" id="mss-backdrop"></div>
+            <div class="mss-panel">
+                <div class="mss-header">
+                    <span class="mss-title">Route Settings</span>
+                    <button class="mss-close" id="mss-close">✕</button>
+                </div>
+                <div class="field-group">
+                    <label for="m-mode">Mode</label>
+                    <div class="select-wrap">
+                        <select id="m-mode">
+                            <option value="foot">🚶 Walk</option>
+                            <option value="ev">⚡ EV</option>
+                            <option value="4-wheeler">🚗 Car</option>
+                            <option value="2-wheeler">🏍 Bike</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label for="m-preference">Prefer</label>
+                    <div class="select-wrap">
+                        <select id="m-preference">
+                            <option value="smooth">🛣 Smooth</option>
+                            <option value="shaded">🌿 Shaded</option>
+                            <option value="shortest">⚡ Fastest</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary mss-done-btn" id="mss-done">Done</button>
+            </div>
         </div>
 
         <!-- Loading overlay -->
@@ -239,7 +340,7 @@
     <script src="mapRenderer.js"></script>
     <script src="app.js"></script>
 
-    <!-- ── View Chooser + Collapsible card logic ───────────────────────────── -->
+    <!-- ── View Chooser + UI Logic ─────────────────────────────────────────── -->
     <script>
         (function () {
             var KEY = 'rr-view';
@@ -249,7 +350,6 @@
             // ── Apply a view mode ────────────────────────────────────────────
             function applyView(mode) {
                 body.setAttribute('data-view', mode);
-                // Update the switch button to show the OTHER option
                 var icon = document.getElementById('switch-view-icon');
                 var label = document.getElementById('switch-view-label');
                 if (mode === 'mobile') {
@@ -259,24 +359,9 @@
                     if (icon) icon.textContent = '📱';
                     if (label) label.textContent = 'Mobile';
                 }
-                // Invalidate Leaflet map size after layout change
                 setTimeout(function () {
-                    if (window.L && window.L.Map) {
-                        document.querySelectorAll('.leaflet-container').forEach(function (el) {
-                            var mapInst = el._leaflet_id && L.Map._instances;
-                            // Simpler: just trigger resize
-                        });
-                    }
                     window.dispatchEvent(new Event('resize'));
                 }, 100);
-
-                // Mobile: collapse search card by default
-                if (mode === 'mobile') {
-                    var sb = document.getElementById('search-body');
-                    if (sb) sb.classList.add('card-body--collapsed');
-                    var ch = document.querySelector('#search-card .card-chevron');
-                    if (ch) ch.style.transform = 'rotate(-90deg)';
-                }
             }
 
             // ── Check saved preference ───────────────────────────────────────
@@ -321,6 +406,87 @@
                     if (chevron) chevron.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
                 });
             });
+
+            // ── Sidebar toggle arrows ────────────────────────────────────────
+            var toggleSearch = document.getElementById('toggle-search');
+            var searchCard = document.getElementById('search-card');
+            if (toggleSearch) {
+                toggleSearch.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    searchCard.classList.toggle('sidebar-hidden');
+                    toggleSearch.textContent = searchCard.classList.contains('sidebar-hidden') ? '▶' : '◀';
+                });
+            }
+            var toggleSummary = document.getElementById('toggle-summary');
+            var summaryCard = document.getElementById('summary-card');
+            if (toggleSummary) {
+                toggleSummary.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    summaryCard.classList.toggle('sidebar-hidden');
+                    toggleSummary.textContent = summaryCard.classList.contains('sidebar-hidden') ? '◀' : '▶';
+                });
+            }
+
+            // ── Advanced accordion toggle ────────────────────────────────────
+            var advToggle = document.getElementById('advanced-toggle');
+            var advBody = document.getElementById('advanced-body');
+            if (advToggle && advBody) {
+                advToggle.addEventListener('click', function () {
+                    var open = advBody.classList.toggle('adv-open');
+                    advToggle.querySelector('.adv-chevron').style.transform = open ? 'rotate(180deg)' : '';
+                });
+            }
+
+            // ── Mobile settings sheet ────────────────────────────────────────
+            var settingsBtn = document.getElementById('msb-settings-btn');
+            var settingsSheet = document.getElementById('mobile-settings-sheet');
+            var settingsClose = document.getElementById('mss-close');
+            var settingsDone = document.getElementById('mss-done');
+            var settingsBackdrop = document.getElementById('mss-backdrop');
+
+            function openSettings() { settingsSheet.classList.add('mss-open'); }
+            function closeSettings() { settingsSheet.classList.remove('mss-open'); }
+
+            if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
+            if (settingsClose) settingsClose.addEventListener('click', closeSettings);
+            if (settingsDone) settingsDone.addEventListener('click', closeSettings);
+            if (settingsBackdrop) settingsBackdrop.addEventListener('click', closeSettings);
+
+            // ── Mobile ↔ Desktop select sync ─────────────────────────────────
+            // Mobile selects sync to desktop selects and vice versa
+            function syncSelect(fromId, toId) {
+                var from = document.getElementById(fromId);
+                var to = document.getElementById(toId);
+                if (from && to) {
+                    from.addEventListener('change', function () { to.value = from.value; });
+                    to.addEventListener('change', function () { from.value = to.value; });
+                }
+            }
+            syncSelect('m-source', 'source');
+            syncSelect('m-destination', 'destination');
+            syncSelect('m-mode', 'mode');
+            syncSelect('m-preference', 'preference');
+
+            // Set initial mobile default
+            var mDst = document.getElementById('m-destination');
+            if (mDst) mDst.value = 'Eco Park';
+
+            // ── Mobile Go button triggers desktop Find Route ─────────────────
+            var mGoBtn = document.getElementById('msb-go-btn');
+            if (mGoBtn) {
+                mGoBtn.addEventListener('click', function () {
+                    // Sync mobile → desktop then click Find Route
+                    var src = document.getElementById('m-source');
+                    var dst = document.getElementById('m-destination');
+                    var mode = document.getElementById('m-mode');
+                    var pref = document.getElementById('m-preference');
+                    if (src) document.getElementById('source').value = src.value;
+                    if (dst) document.getElementById('destination').value = dst.value;
+                    if (mode) document.getElementById('mode').value = mode.value;
+                    if (pref) document.getElementById('preference').value = pref.value;
+                    document.getElementById('find-path-btn').click();
+                });
+            }
         })();
     </script>
 </body>

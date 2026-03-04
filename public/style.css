@@ -91,50 +91,29 @@ body {
     white-space: nowrap;
 }
 
-.algo-chip {
-    background: rgba(37, 99, 235, 0.18);
-    border-color: rgba(37, 99, 235, 0.35);
-    color: #93c5fd;
-}
-
-/* Road condition strip in topbar */
-.road-condition-bar {
+/* ─── Switch View Button ─────────────────────────────────────────────────── */
+.switch-view-btn {
+    margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-left: auto;
-}
-
-.rc-label,
-.rc-hint {
-    font-size: 0.685rem;
-    color: #64748b;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
     white-space: nowrap;
 }
 
-.rc-strip {
-    display: flex;
-    width: 80px;
-    height: 6px;
-    border-radius: 3px;
-    overflow: hidden;
-    gap: 1px;
-}
-
-.rc-seg {
-    height: 100%;
-}
-
-.rc-seg.smooth {
-    background: var(--smooth);
-}
-
-.rc-seg.shaded {
-    background: var(--shaded);
-}
-
-.rc-seg.rough {
-    background: var(--rough);
+.switch-view-btn:hover {
+    background: rgba(37, 99, 235, 0.18);
+    border-color: rgba(37, 99, 235, 0.35);
+    color: #93c5fd;
 }
 
 /* ─── Map Stage ──────────────────────────────────────────────────────────── */
@@ -150,7 +129,6 @@ body {
     z-index: 0;
 }
 
-/* Leaflet attribution stays below cards */
 .leaflet-bottom {
     z-index: 5 !important;
 }
@@ -169,10 +147,59 @@ body {
     border: 1px solid var(--card-border);
     border-radius: 16px;
     box-shadow: var(--card-shadow);
-    /* overflow intentionally NOT set — would clip <select> dropdowns */
+    transition: transform 0.3s cubic-bezier(.4, 0, .2, 1), box-shadow 0.2s ease, opacity 0.25s ease;
 }
 
-/* ── Collapsible card header ──────────────────────────────────────────────── */
+.float-card:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Sidebar Toggle Arrows ───────────────────────────────────────────────── */
+.sidebar-toggle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 48px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 0 8px 8px 0;
+    font-size: 0.65rem;
+    color: var(--text-2);
+    cursor: pointer;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-toggle:hover {
+    background: #f1f5f9;
+}
+
+.sidebar-toggle-left {
+    right: -23px;
+    border-radius: 0 8px 8px 0;
+}
+
+.sidebar-toggle-right {
+    left: -23px;
+    border-radius: 8px 0 0 8px;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Hidden sidebar state */
+.search-card.sidebar-hidden {
+    transform: translateX(calc(-100% - 2rem));
+}
+
+.summary-card.sidebar-hidden {
+    transform: translateX(calc(100% + 2rem));
+}
+
+/* ── Collapsible card header ─────────────────────────────────────────────── */
 .card-header {
     display: flex;
     align-items: center;
@@ -209,9 +236,7 @@ body {
     padding: 0.85rem 1.1rem 1.1rem;
     max-height: 80vh;
     overflow-y: auto;
-    transition: max-height 0.3s cubic-bezier(.4, 0, .2, 1),
-        opacity 0.25s ease,
-        padding 0.25s ease;
+    transition: max-height 0.3s cubic-bezier(.4, 0, .2, 1), opacity 0.25s ease, padding 0.25s ease;
 }
 
 .card-body--collapsed {
@@ -222,73 +247,26 @@ body {
     overflow: hidden;
 }
 
-/* Search card — top left */
+/* ─── Search card — top left ─────────────────────────────────────────────── */
 .search-card {
     top: 1rem;
     left: 1rem;
     width: 296px;
     padding: 0;
-    /* padding now on card-header / card-body */
     display: flex;
     flex-direction: column;
 }
 
-
-/* Summary card — right side, collapsible */
+/* ─── Summary card — BOTTOM right ────────────────────────────────────────── */
 .summary-card {
-    top: 1rem;
+    bottom: 1rem;
     right: 1rem;
     width: 310px;
     padding: 0;
     display: flex;
     flex-direction: column;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-
-.summary-card.collapsed {
-    opacity: 0;
-    transform: translateX(20px);
-    pointer-events: none;
-}
-
-/* Collapse toggle button */
-.summary-toggle {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 1100;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.35rem 0.75rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--text-1);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    box-shadow: 0 2px 8px var(--shadow);
-    transition: background 0.15s;
-}
-
-.summary-toggle:hover {
-    background: var(--bg-2);
-}
-
-.summary-toggle.open {
-    right: 326px;
-}
-
-/* Legend card — bottom right */
-.legend-card {
-    bottom: 1.25rem;
-    right: 1.25rem;
-    padding: 0.9rem 1.1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
+    top: auto !important;
+    transition: transform 0.3s cubic-bezier(.4, 0, .2, 1), opacity 0.25s ease;
 }
 
 /* ─── Search Card Internals ──────────────────────────────────────────────── */
@@ -418,7 +396,223 @@ select:focus {
     transform: none;
 }
 
-/* ─── Summary Card ───────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ADVANCED ACCORDION (PATH TYPE + TRAFFIC in search card)                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+.advanced-section {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 0.5rem;
+}
+
+.advanced-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-2);
+    cursor: pointer;
+    padding: 0.3rem 0;
+}
+
+.adv-chevron {
+    font-size: 1rem;
+    transition: transform 0.25s cubic-bezier(.4, 0, .2, 1);
+    color: var(--text-3);
+}
+
+.advanced-body {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s cubic-bezier(.4, 0, .2, 1), opacity 0.25s ease;
+}
+
+.advanced-body.adv-open {
+    max-height: 500px;
+    opacity: 1;
+}
+
+/* Traffic banner */
+.traffic-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    margin: 0.5rem 0 0.4rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.traffic-banner.traf-free {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.traffic-banner.traf-low {
+    background: rgba(132, 204, 22, 0.08);
+    border-color: rgba(132, 204, 22, 0.3);
+}
+
+.traffic-banner.traf-medium {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.traffic-banner.traf-high {
+    background: rgba(239, 68, 68, 0.10);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.traffic-banner-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-2);
+}
+
+.traffic-badge {
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2rem 0.75rem;
+    border-radius: 99px;
+    border: 2px solid currentColor;
+}
+
+.traffic-badge.traf-free {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.10);
+}
+
+.traffic-badge.traf-low {
+    color: #84cc16;
+    background: rgba(132, 204, 22, 0.10);
+}
+
+.traffic-badge.traf-medium {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.10);
+}
+
+.traffic-badge.traf-high {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.10);
+}
+
+/* PATH TYPE rows */
+.pt-row {
+    margin-bottom: 0.35rem;
+}
+
+.pt-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+}
+
+.pt-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.pt-name {
+    font-size: 0.77rem;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pt-pct {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 34px;
+    text-align: right;
+}
+
+.pt-road-name {
+    font-size: 0.68rem;
+    color: var(--text-2);
+    font-style: italic;
+    padding-left: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pt-bar-track {
+    height: 5px;
+    border-radius: 99px;
+    background: #f3f4f6;
+    overflow: hidden;
+    margin-top: 2px;
+}
+
+.pt-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 500ms cubic-bezier(.4, 0, .2, 1);
+}
+
+.pt-dot.lane6 {
+    background: #e11d48;
+}
+
+.pt-dot.lane4 {
+    background: #f59e0b;
+}
+
+.pt-dot.lane2 {
+    background: #3b82f6;
+}
+
+.pt-dot.oneway {
+    background: #8b5cf6;
+}
+
+.pt-dot.narrow {
+    background: #6b7280;
+}
+
+.pt-bar-fill.lane6 {
+    background: #e11d48;
+}
+
+.pt-bar-fill.lane4 {
+    background: #f59e0b;
+}
+
+.pt-bar-fill.lane2 {
+    background: #3b82f6;
+}
+
+.pt-bar-fill.oneway {
+    background: #8b5cf6;
+}
+
+.pt-bar-fill.narrow {
+    background: #6b7280;
+}
+
+/* ─── Summary Card Internals ─────────────────────────────────────────────── */
 .summary-title {
     font-size: 1rem;
     font-weight: 700;
@@ -440,12 +634,6 @@ select:focus {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-}
-
-.quality-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
 }
 
 .quality-title {
@@ -515,7 +703,7 @@ select:focus {
     background: var(--rough);
 }
 
-/* Alternative routes */
+/* ─── Alternative Routes ─────────────────────────────────────────────────── */
 .alt-label {
     font-size: 0.68rem;
     font-weight: 600;
@@ -539,7 +727,7 @@ select:focus {
     background: transparent;
     font-family: inherit;
     cursor: pointer;
-    transition: border-color 130ms, background 130ms;
+    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s, transform 0.15s;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -550,6 +738,22 @@ select:focus {
 .alt-btn:hover {
     border-color: var(--primary);
     background: var(--primary-glow);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+    transform: translateY(-1px);
+}
+
+.alt-btn--active {
+    border-color: var(--primary) !important;
+    background: var(--primary-glow) !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+}
+
+.alt-btn-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
 }
 
 .alt-btn-text {
@@ -569,7 +773,17 @@ select:focus {
     color: var(--text-2);
 }
 
-/* ─── Legend Card ────────────────────────────────────────────────────────── */
+.alt-btn-diff {
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-left: 0.35rem;
+}
+
+/* ─── Integrated Legend (inside summary card) ────────────────────────────── */
+.summary-legend {
+    padding-top: 0.3rem;
+}
+
 .legend-row {
     display: flex;
     align-items: center;
@@ -577,6 +791,7 @@ select:focus {
     font-size: 0.775rem;
     color: var(--text-2);
     white-space: nowrap;
+    padding: 0.1rem 0;
 }
 
 .lc-line {
@@ -618,7 +833,7 @@ select:focus {
 .legend-divider {
     height: 1px;
     background: #e5e7eb;
-    margin: 0.2rem 0;
+    margin: 0.3rem 0;
 }
 
 /* ─── Loading Overlay ────────────────────────────────────────────────────── */
@@ -675,204 +890,7 @@ select:focus {
     margin-top: 2px;
 }
 
-/* ─── PATH TYPE Card ─────────────────────────────────────────────────────── */
-.pathtype-card {
-    top: auto;
-    /* detach from top */
-    left: 1rem;
-    width: 296px;
-    min-width: 296px;
-    max-width: 296px;
-    padding: 0.9rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    /* Will be positioned dynamically by JS after search-card height is known */
-    overflow: hidden;
-}
-
-.pathtype-header {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 0.5rem;
-}
-
-.pathtype-icon {
-    font-size: 0.95rem;
-}
-
-.pathtype-title {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.09em;
-    color: var(--text-2);
-}
-
-/* Individual road type row */
-.pt-row {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.pt-row-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.35rem;
-    min-width: 0;
-}
-
-.pt-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.pt-name {
-    font-size: 0.77rem;
-    font-weight: 600;
-    color: var(--text);
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pt-pct {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--text);
-    min-width: 34px;
-    text-align: right;
-}
-
-.pt-road-name {
-    font-size: 0.68rem;
-    color: var(--text-2);
-    font-style: italic;
-    padding-left: 1.1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pt-bar-track {
-    height: 5px;
-    border-radius: 99px;
-    background: #f3f4f6;
-    overflow: hidden;
-    margin-top: 2px;
-}
-
-.pt-bar-fill {
-    height: 100%;
-    border-radius: 99px;
-    transition: width 500ms cubic-bezier(.4, 0, .2, 1);
-}
-
-/* Colors per road type */
-.pt-dot.lane6 {
-    background: #e11d48;
-}
-
-.pt-dot.lane4 {
-    background: #f59e0b;
-}
-
-.pt-dot.lane2 {
-    background: #3b82f6;
-}
-
-.pt-dot.oneway {
-    background: #8b5cf6;
-}
-
-.pt-dot.narrow {
-    background: #6b7280;
-}
-
-.pt-bar-fill.lane6 {
-    background: #e11d48;
-}
-
-.pt-bar-fill.lane4 {
-    background: #f59e0b;
-}
-
-.pt-bar-fill.lane2 {
-    background: #3b82f6;
-}
-
-.pt-bar-fill.oneway {
-    background: #8b5cf6;
-}
-
-.pt-bar-fill.narrow {
-    background: #6b7280;
-}
-
-/* Traffic row */
-.pathtype-traffic {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid #f1f5f9;
-    padding-top: 0.55rem;
-    margin-top: 0.1rem;
-}
-
-.traffic-label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.09em;
-    color: var(--text-2);
-}
-
-.traffic-badge {
-    font-size: 0.74rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    padding: 0.2rem 0.65rem;
-    border-radius: 99px;
-    border: 1.5px solid currentColor;
-}
-
-.traffic-badge.traf-free {
-    color: #22c55e;
-    background: rgba(34, 197, 94, 0.10);
-}
-
-.traffic-badge.traf-low {
-    color: #84cc16;
-    background: rgba(132, 204, 22, 0.10);
-}
-
-.traffic-badge.traf-medium {
-    color: #f59e0b;
-    background: rgba(245, 158, 11, 0.10);
-}
-
-.traffic-badge.traf-high {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.10);
-}
-
-/* Alternative route diff chips (+/- time/distance) */
-.alt-btn-diff {
-    font-size: 0.72rem;
-    font-weight: 600;
-    margin-left: 0.35rem;
-}
-
-/* ─── Leaflet Tooltip (route hover) ─────────────────────────────────────── */
+/* ─── Leaflet Tooltip ────────────────────────────────────────────────────── */
 .leaflet-tooltip {
     background: #0f172a !important;
     color: #f1f5f9 !important;
@@ -891,25 +909,7 @@ select:focus {
     display: none !important;
 }
 
-/* ─── Smooth float card entrance ─────────────────────────────────────────── */
-.float-card {
-    transition: box-shadow 0.2s ease, opacity 0.25s ease;
-}
-
-.float-card:hover {
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 3px 12px rgba(0, 0, 0, 0.08);
-}
-
-/* ─── Smooth alt route list ──────────────────────────────────────────────── */
-.alt-btn {
-    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s !important;
-}
-
-.alt-btn:hover {
-    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.12);
-}
-
-/* ─── Route line pulse animation for active route ────────────────────────── */
+/* ─── Route line pulse ───────────────────────────────────────────────────── */
 @keyframes routePulse {
     0% {
         opacity: 0.88;
@@ -1028,8 +1028,7 @@ select:focus {
     flex-direction: column;
     align-items: center;
     gap: 0.65rem;
-    transition: transform 0.22s ease, border-color 0.22s ease,
-        background 0.22s ease, box-shadow 0.22s ease;
+    transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
     font-family: inherit;
     color: #f1f5f9;
 }
@@ -1068,44 +1067,37 @@ select:focus {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* SWITCH VIEW BUTTON (topbar)                                               */
+/* MOBILE SEARCH BAR + SETTINGS SHEET (hidden in desktop)                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-.switch-view-btn {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 20px;
-    padding: 0.25rem 0.75rem;
-    font-family: inherit;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #94a3b8;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
-    white-space: nowrap;
+.mobile-search-bar {
+    display: none;
 }
 
-.switch-view-btn:hover {
-    background: rgba(37, 99, 235, 0.18);
-    border-color: rgba(37, 99, 235, 0.35);
-    color: #93c5fd;
+.mobile-settings-sheet {
+    display: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* MOBILE VIEW  (body[data-view="mobile"])                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Topbar compact ───────────────────────────────────────────────────────── */
-body[data-view="mobile"] .topbar {
-    height: 44px;
-    padding: 0 0.75rem;
+/* ── Hide desktop-only elements ───────────────────────────────────────────── */
+body[data-view="mobile"] .search-card {
+    display: none !important;
+}
+
+body[data-view="mobile"] .sidebar-toggle {
+    display: none !important;
 }
 
 body[data-view="mobile"] .topbar-meta {
     display: none;
+}
+
+/* ── Topbar compact ───────────────────────────────────────────────────────── */
+body[data-view="mobile"] .topbar {
+    height: 44px;
+    padding: 0 0.75rem;
 }
 
 body[data-view="mobile"] .brand-name {
@@ -1116,54 +1108,176 @@ body[data-view="mobile"] .brand-icon {
     font-size: 1.1rem;
 }
 
-/* ── All floating cards → full-width, bottom-anchored ─────────────────────── */
-body[data-view="mobile"] .float-card {
-    border-radius: 16px 16px 0 0;
+/* ── Mobile Search Bar: compact bottom bar ────────────────────────────────── */
+body[data-view="mobile"] .mobile-search-bar {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--card-border);
+    padding: 0.5rem 0.6rem;
+    gap: 0.4rem;
+    align-items: center;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.10);
+}
+
+.msb-fields {
+    flex: 1;
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+    min-width: 0;
+}
+
+.msb-select {
+    flex: 1;
+    min-width: 0;
+    padding: 0.45rem 0.4rem;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.75rem;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.msb-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.msb-arrow {
+    color: var(--text-3);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.msb-settings-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.msb-settings-btn:hover {
+    background: var(--primary-glow);
+}
+
+.msb-go-btn {
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.30);
+    transition: background 0.15s;
+}
+
+.msb-go-btn:hover {
+    background: var(--primary-h);
+}
+
+/* ── Mobile Settings Sheet ────────────────────────────────────────────────── */
+body[data-view="mobile"] .mobile-settings-sheet {
+    display: block;
+}
+
+.mobile-settings-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.mobile-settings-sheet.mss-open {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.mss-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+}
+
+.mss-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border-radius: 20px 20px 0 0;
+    padding: 1.2rem 1.2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(.4, 0, .2, 1);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-settings-sheet.mss-open .mss-panel {
+    transform: translateY(0);
+}
+
+.mss-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mss-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.mss-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-2);
+    padding: 0.25rem;
+}
+
+.mss-done-btn {
+    margin-top: 0.5rem;
+}
+
+/* ── Mobile: summary card as bottom sheet ─────────────────────────────────── */
+body[data-view="mobile"] .summary-card {
+    bottom: 56px !important;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    top: auto !important;
-}
-
-/* ── Search card: bottom sheet ────────────────────────────────────────────── */
-body[data-view="mobile"] .search-card {
-    bottom: 0;
-    z-index: 30;
     border-radius: 16px 16px 0 0;
-}
-
-body[data-view="mobile"] .search-card .card-body {
-    max-height: 50vh;
-    padding: 0.6rem 0.9rem 0.9rem;
-    gap: 0.55rem;
-}
-
-body[data-view="mobile"] .search-card select {
-    font-size: 0.8rem;
-    padding: 0.45rem 1.6rem 0.45rem 0.6rem;
-}
-
-body[data-view="mobile"] .search-card .btn-primary {
-    padding: 0.55rem 0.75rem;
-    font-size: 0.82rem;
-}
-
-body[data-view="mobile"] .search-card .field-group label {
-    font-size: 0.62rem;
-}
-
-body[data-view="mobile"] .swap-btn {
-    width: 24px;
-    height: 24px;
-    font-size: 0.75rem;
-}
-
-/* ── Summary card: bottom sheet ───────────────────────────────────────────── */
-body[data-view="mobile"] .summary-card {
-    bottom: 0;
     z-index: 28;
-    border-radius: 16px 16px 0 0;
+    max-height: 55vh;
 }
 
 body[data-view="mobile"] .summary-card .card-body {
@@ -1178,48 +1292,37 @@ body[data-view="mobile"] .summary-status {
     font-size: 0.82rem;
 }
 
-/* ── Pathtype card ────────────────────────────────────────────────────────── */
-body[data-view="mobile"] .pathtype-card {
-    bottom: 0;
-    z-index: 26;
-    top: auto !important;
+/* ── Mobile: quality text bigger ──────────────────────────────────────────── */
+body[data-view="mobile"] .quality-legend {
+    font-size: 0.85rem;
+    gap: 0.6rem;
+    padding: 0.25rem 0;
 }
 
-body[data-view="mobile"] .pathtype-card .card-body {
-    max-height: 40vh;
+body[data-view="mobile"] .quality-title {
+    font-size: 0.75rem;
 }
 
-/* ── Legend card: compact top-right ───────────────────────────────────────── */
-body[data-view="mobile"] .legend-card {
-    top: 0.5rem !important;
-    right: 0.5rem !important;
-    left: auto !important;
-    bottom: auto !important;
-    width: auto !important;
-    border-radius: 12px !important;
-    padding: 0.5rem 0.7rem;
-    gap: 0.3rem;
+body[data-view="mobile"] .quality-bar {
+    height: 12px;
 }
 
-body[data-view="mobile"] .legend-card .legend-row {
-    font-size: 0.68rem;
-    gap: 0.35rem;
+/* ── Mobile: horizontal swipeable alt routes ──────────────────────────────── */
+body[data-view="mobile"] .alt-list {
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 0.5rem;
+    padding-bottom: 0.3rem;
+    -webkit-overflow-scrolling: touch;
 }
 
-body[data-view="mobile"] .legend-card .lc-line {
-    width: 18px;
-    height: 3px;
-}
-
-body[data-view="mobile"] .legend-card .lc-pin {
-    width: 8px;
-    height: 8px;
-}
-
-/* ── Alt buttons compact ──────────────────────────────────────────────────── */
 body[data-view="mobile"] .alt-btn {
+    min-width: 180px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
     font-size: 0.78rem;
-    padding: 0.5rem 0.65rem;
+    padding: 0.55rem 0.7rem;
 }
 
 body[data-view="mobile"] .alt-btn-label {
@@ -1230,17 +1333,23 @@ body[data-view="mobile"] .alt-btn-meta {
     font-size: 0.7rem;
 }
 
-/* ── Quality section compact ──────────────────────────────────────────────── */
-body[data-view="mobile"] .quality-legend {
-    font-size: 0.66rem;
-    gap: 0.5rem;
+/* ── Mobile: integrated legend smaller ────────────────────────────────────── */
+body[data-view="mobile"] .summary-legend .legend-row {
+    font-size: 0.68rem;
+    gap: 0.35rem;
 }
 
-body[data-view="mobile"] .quality-title {
-    font-size: 0.64rem;
+body[data-view="mobile"] .summary-legend .lc-line {
+    width: 18px;
+    height: 3px;
 }
 
-/* ── Loading overlay adjustments ──────────────────────────────────────────── */
+body[data-view="mobile"] .summary-legend .lc-pin {
+    width: 8px;
+    height: 8px;
+}
+
+/* ── Mobile: loading ──────────────────────────────────────────────────────── */
 body[data-view="mobile"] .loading-overlay {
     font-size: 0.8rem;
 }
